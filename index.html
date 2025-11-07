@@ -362,8 +362,8 @@
                 image: "images/p3.png",
                 audio: "audio/three.mp3",
                 question: "ماذا تفعل الآن؟",
-                answers: ["أحاول إصلاحها", "أتركها كما هي", "أخفيها"],
-                correct: 0
+                answers: ["أتركها كما هي", "أحاول إصلاحها", "أخفيها"],
+                correct: 1
             },
         ];
 
@@ -413,27 +413,39 @@
         }
 
         function handleAnswer(index) {
-            if (index === questions[currentQuestion].correct) {
-                if (currentQuestion < questions.length - 1) {
-                    const arrow = document.getElementById('compassArrow');
-                    arrow.style.transform = `translate(-50%, -50%) rotate(${rotations[currentQuestion + 1]}deg)`;
-                    
-                    setTimeout(() => {
-                        currentQuestion++;
-                        displayQuestion();
-                    }, 600);
-                } else {
-                    const arrow = document.getElementById('compassArrow');
-                    arrow.style.transform = `translate(-50%, -50%) rotate(360deg)`;
-                    
-                    setTimeout(() => {
-                        completeGame();
-                    }, 600);
-                }
+    if (index === questions[currentQuestion].correct) {
+        // ✅ Play "correct" sound first
+        const correctAudio = new Audio('audio/true.mp3');
+        correctAudio.play();
+
+        // ✅ Wait until the sound finishes, THEN continue
+        correctAudio.addEventListener('ended', () => {
+            if (currentQuestion < questions.length - 1) {
+                const arrow = document.getElementById('compassArrow');
+                arrow.style.transform = `translate(-50%, -50%) rotate(${rotations[currentQuestion + 1]}deg)`;
+                
+                setTimeout(() => {
+                    currentQuestion++;
+                    displayQuestion();
+                }, 600);
             } else {
-                wrongModal.show();
+                const arrow = document.getElementById('compassArrow');
+                arrow.style.transform = `translate(-50%, -50%) rotate(360deg)`;
+                
+                setTimeout(() => {
+                    completeGame();
+                }, 600);
             }
-        }
+        });
+
+    } else {
+        // ❌ Wrong answer logic
+        wrongModal.show();
+        const audio = new Audio('audio/try.mp3');
+        audio.play();
+    }
+}
+
 
         function completeGame() {
             if (currentAudio) {
