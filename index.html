@@ -34,13 +34,11 @@
         .question-image {
             width: 75%;
             height: 240px;
-            /* object-fit: contain; */
             border-radius: 15px;
         }
         .question-image-p {
             width: 20%;
             height: 150px;
-            /* object-fit: contain; */
             border-radius: 15px;
         }
         .question-text {
@@ -143,7 +141,6 @@
             height: 20px;
             border-radius: 50%;
             background: #667eea;
-            /* box-shadow: 0 2px 8px rgba(0,0,0,0.3); */
         }
 
         .completion-card {
@@ -224,7 +221,7 @@
 <body>
     <div class="container-fluid py-4">
         <h1 class="text-center text-white mb-4 game-title">
-            🧭 لعبة البوصلة التعليمية! 🧭
+            🧭 لعبة  بوصله الاعتزار! 🧭
         </h1>
         
         <!-- Start Screen -->
@@ -234,7 +231,7 @@
                     <div class="card-body p-5">
                         <div class="completion-emoji mb-3">🧭</div>
                         <h1 class="fw-bold mb-3" style="font-size: 2.5rem; color: #667eea;">
-                            لعبة البوصلة التعليمية
+                            لعبة  بوصله الاعتزار
                         </h1>
                         <h2 class="fs-4 mb-4 text-dark">
                             تعلم الاعتراف والاعتذار والإصلاح
@@ -307,10 +304,6 @@
                         <h2 class="fs-2 mb-4 text-dark">
                             لقد أكملت جميع الاتجاهات!
                         </h2>
-                        <!-- <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#28a745" stroke-width="2" class="mb-3">
-                            <circle cx="12" cy="8" r="7"></circle>
-                            <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
-                        </svg> -->
                         <img src="images/p4.png" class="question-image-p">
                         <div class="mt-4">
                             <button onclick="restartGame()" class="btn restart-btn">
@@ -345,7 +338,7 @@
                 direction: "تعلم",
                 image: "images/p1.png",
                 audio: "audio/one.mp3",
-                question: "ماذا حدث هنا؟",
+                question: "قام علي بكسر لعبة صديقه أحمد بغير قصد، لو كنت مكان علي ماذا ستفعل تعترف وتقول",
                 answers: ["أنا كسرت اللعبة", "اللعبة كسرت نفسها", "لا أعرف"],
                 correct: 0
             },
@@ -353,7 +346,7 @@
                 direction: "العب",
                 image: "images/p2.png",
                 audio: "audio/two.mp3",
-                question: "ماذا تقول له؟",
+                question: "حزن أحمد صديق علي كثيرا لو كنت مكان علي ماذا تقول له؟",
                 answers: ["أنا آسف، لم أكن أقصد", "هذا ليس خطئي", "أنت مبالغ"],
                 correct: 0
             },
@@ -361,7 +354,7 @@
                 direction: "كل",
                 image: "images/p3.png",
                 audio: "audio/three.mp3",
-                question: "ماذا تفعل الآن؟",
+                question: "ماذا تفعل بعد أن تعتذر؟",
                 answers: ["أتركها كما هي", "أحاول إصلاحها", "أخفيها"],
                 correct: 1
             },
@@ -372,9 +365,34 @@
         let currentQuestion = 0;
         let wrongModal;
         let currentAudio = null;
+        let effectAudio = null;
 
         function init() {
             wrongModal = new bootstrap.Modal(document.getElementById('wrongModal'));
+        }
+
+        function stopAllAudio() {
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+                currentAudio = null;
+            }
+            if (effectAudio) {
+                effectAudio.pause();
+                effectAudio.currentTime = 0;
+                effectAudio = null;
+            }
+        }
+
+        function playEffectAudio(audioUrl, callback) {
+            stopAllAudio();
+            
+            effectAudio = new Audio(audioUrl);
+            effectAudio.play().catch(e => console.log('Audio play failed:', e));
+            
+            if (callback) {
+                effectAudio.addEventListener('ended', callback);
+            }
         }
 
         function startGame() {
@@ -384,10 +402,7 @@
         }
 
         function playQuestionAudio(audioUrl) {
-            if (currentAudio) {
-                currentAudio.pause();
-                currentAudio.currentTime = 0;
-            }
+            stopAllAudio();
             
             currentAudio = new Audio(audioUrl);
             currentAudio.play().catch(e => console.log('Audio play failed:', e));
@@ -413,45 +428,36 @@
         }
 
         function handleAnswer(index) {
-    if (index === questions[currentQuestion].correct) {
-        // ✅ Play "correct" sound first
-        const correctAudio = new Audio('audio/true.mp3');
-        correctAudio.play();
+            if (index === questions[currentQuestion].correct) {
+                // ✅ Play "correct" sound first
+                playEffectAudio('audio/true.mp3', () => {
+                    if (currentQuestion < questions.length - 1) {
+                        const arrow = document.getElementById('compassArrow');
+                        arrow.style.transform = `translate(-50%, -50%) rotate(${rotations[currentQuestion + 1]}deg)`;
+                        
+                        setTimeout(() => {
+                            currentQuestion++;
+                            displayQuestion();
+                        }, 600);
+                    } else {
+                        const arrow = document.getElementById('compassArrow');
+                        arrow.style.transform = `translate(-50%, -50%) rotate(360deg)`;
+                        
+                        setTimeout(() => {
+                            completeGame();
+                        }, 600);
+                    }
+                });
 
-        // ✅ Wait until the sound finishes, THEN continue
-        correctAudio.addEventListener('ended', () => {
-            if (currentQuestion < questions.length - 1) {
-                const arrow = document.getElementById('compassArrow');
-                arrow.style.transform = `translate(-50%, -50%) rotate(${rotations[currentQuestion + 1]}deg)`;
-                
-                setTimeout(() => {
-                    currentQuestion++;
-                    displayQuestion();
-                }, 600);
             } else {
-                const arrow = document.getElementById('compassArrow');
-                arrow.style.transform = `translate(-50%, -50%) rotate(360deg)`;
-                
-                setTimeout(() => {
-                    completeGame();
-                }, 600);
+                // ❌ Wrong answer logic
+                wrongModal.show();
+                playEffectAudio('audio/try.mp3');
             }
-        });
-
-    } else {
-        // ❌ Wrong answer logic
-        wrongModal.show();
-        const audio = new Audio('audio/try.mp3');
-        audio.play();
-    }
-}
-
+        }
 
         function completeGame() {
-            if (currentAudio) {
-                currentAudio.pause();
-                currentAudio.currentTime = 0;
-            }
+            stopAllAudio();
             
             document.getElementById('gameArea').style.display = 'none';
             document.getElementById('completionArea').style.display = 'flex';
@@ -460,8 +466,8 @@
         }
 
         function playClap() {
-            const audio = new Audio('audio/clap.mp3');
-            audio.play().catch(e => console.log('Audio play failed:', e));
+            effectAudio = new Audio('audio/clap.mp3');
+            effectAudio.play().catch(e => console.log('Audio play failed:', e));
         }
 
         function createConfetti() {
@@ -482,10 +488,7 @@
         }
 
         function restartGame() {
-            if (currentAudio) {
-                currentAudio.pause();
-                currentAudio.currentTime = 0;
-            }
+            stopAllAudio();
             
             currentQuestion = 0;
             document.getElementById('completionArea').style.display = 'none';
